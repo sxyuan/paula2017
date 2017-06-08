@@ -19,12 +19,20 @@ var TILES = [
     walkable: true,
     seethrough: true
   },
+  {
+    raw_symbol: "M",
+    display_symbol: "X",
+    walkable: false,
+    seethrough: false
+  },
 ];
 var TILE_INDEX = {};
 for (var i = 0; i < TILES.length; i++) {
   var tile = TILES[i];
   TILE_INDEX[tile.raw_symbol] = i;
 }
+
+var LIGHT_RADIUS = 9;
 
 var Map = function() {
   var raw_map = [
@@ -39,15 +47,15 @@ var Map = function() {
     "X                                                                                                                                     X",
     "X                                                                                                                                     X",
     "X                                                                                                                                     X",
-    "X          ...   ...                                                                                                                  X",
-    "X          .X.   .X.......              ........      X   X                         XXXXXX                              XXX           X",
-    "X          .X.   .X..XXXXL.XXXXX  XXXXX .XX..XX.     XX   X    X  XXXXX X    X      X     X   XX   X    X X        XX   XXX           X",
-    "X          .X.....X.XX  XX.X   XX X   XX..XXXX..    XLX   X    X    X   X    X      X     X  X  X  X    X X       X  X  XXX           X",
-    "XS         .XXXXXXX.X    X.X   XX X   XX ..XXL.       X   X    X    X   XXXXXX      XXXXXX  X    X X    X X      X    X  X            X",
-    "X          .X.....X.XXXXXX.XXXXX. XXXXX   .XX.        X   XXXXXXX   X   X    X      X       XXXXXX X    X X      XXXXXX               X",
-    "X          .X.   LX.X....X.X..... XL      .XX.        X        X    X   X    X      X       X    X X    X X      X    X XXX           X",
-    "X          .X.   .X.X.  .X.X.    .X       .XX.      XXXXX      X    X   X    X      X       X    X  XXXX  XXXXXX X    X XXX           X",
-    "X          ...   .....  .....    .        ....                                                                                        X",
+    "X                                                                                                                                     X",
+    "X           X     X.......              ........      X   X   .........     ...     XXXXXX  ..         ..               XXX.          X",
+    "X           X     X..XXXXL.XXXXX  XXXXX .XX..XX.     XX   X   .X..XXXXX X   .XL     X     X.LXXXX  X   LX X       XXXX  XXXL          X",
+    "X           X     X.XX  XX.X   XX X   XX..XXXX..    XLX   X  ..X....X.  X....X.     X     X.XX  XX X   .X X      XX  XX XXX.          X",
+    "XS          XXXXXXX.X    X.X   XX X   XX ..XXL.     ..X   X  .LX.  .X.  XXXXXX.     XXXXXX .X    X X    X X      X    X  X            X",
+    "X           X.....X.XXXXXX.XXXXX. XXXXX   .XX.        X   XXXXXXX  .X.  X    X.     X       XXXXXX X    X X      XXXXXX               X",
+    "X           X.   LX.X....X.X..... XL.     .XX.        X        X   .X.  X    X.    .X       X    X X    X X      X.   X XXX           X",
+    "X           X.   .X.X.  .X.X.    .X..     .XX.      XXXXX      X   .XL  X    X.    LX       X    X LXXXX  XXXXXX XL   X XXX           X",
+    "X                .....  .....    ...      ....                     ...      ...    ..              ...           ..                   X",
     "X                                                                                                                                     X",
     "X                                                                                                                                     X",
     "X                                                                                                                                     X",
@@ -71,23 +79,27 @@ var Map = function() {
       switch (symbol) {
         case 'S':
           this.character = {x: x, y: y};
-          this.tiles[x][y] = TILE_INDEX['.'];
+          this.setTile(x, y, TILE_INDEX['.']);
           break;
         case 'L':
-          this.lights[[x, y]] = true;
-          this.tiles[x][y] = TILE_INDEX[symbol];
+          this.lights[[x, y]] = [x, y];
+          this.setTile(x, y, TILE_INDEX[symbol]);
           break;
         case ' ':
-          this.tiles[x][y] = -1;
+          this.setTile(x, y, -1);
           break;
         default:
-          this.tiles[x][y] = TILE_INDEX[symbol];
+          this.setTile(x, y, TILE_INDEX[symbol]);
           break;
       }
     }
   }
   this.fillMaze();
 };
+
+Map.prototype.setTile = function(x, y, type) {
+  this.tiles[x][y] = type;
+}
 
 Map.prototype.isUnfilled = function(x, y) {
   return this.isValid(x - 1, y - 1) && !this.at(x, y);
@@ -129,20 +141,20 @@ Map.prototype.fillMaze = function() {
       stack.push(pos);
     }
     var next_dir = dirs[Math.floor(Math.random() * dirs.length)];
-    this.tiles[pos.x + next_dir.x][pos.y + next_dir.y] = TILE_INDEX['.'];
+    this.setTile(pos.x + next_dir.x, pos.y + next_dir.y, TILE_INDEX['.']);
     var next = {x: pos.x + 2 * next_dir.x, y: pos.y + 2 * next_dir.y};
-    if (this.isUnfilled(next.x, next.y)) this.tiles[next.x][next.y] = TILE_INDEX['.'];
+    if (this.isUnfilled(next.x, next.y)) this.setTile(next.x, next.y, TILE_INDEX['.']);
     getSides(next_dir.x, next_dir.y).forEach(function(diagonal) {
       var x = pos.x + diagonal.x;
       var y = pos.y + diagonal.y;
-      if (this.isUnfilled(x, y)) this.tiles[x][y] = TILE_INDEX['X'];
+      if (this.isUnfilled(x, y)) this.setTile(x, y, TILE_INDEX['M']);
     }.bind(this));
     pos = next;
   }
   // Fill any remaining tiles.
   for (var x = 0; x < this.width; x++) {
     for (var y = 0; y < this.height; y++) {
-      if (this.tiles[x][y] == -1) this.tiles[x][y] = TILE_INDEX['.'];
+      if (this.tiles[x][y] == -1) this.setTile(x, y, TILE_INDEX['.']);
     }
   }
 }
@@ -160,6 +172,14 @@ Map.prototype.seethrough = function(x, y) {
   var tile = this.at(x, y);
   if (!tile) return false;
   return tile.seethrough;
+};
+
+Map.prototype.isOnLight = function(x, y) {
+  return this.at(this.character.x, this.character.y) == TILES[TILE_INDEX["L"]];
+};
+
+Map.prototype.numLights = function() {
+  return Object.keys(this.lights).length;
 };
 
 var TextLine = function(text) {
@@ -203,6 +223,7 @@ var Game = function() {
   this.needs_render = true;
   this.visibility = 0;
   this.map_opacity = 0.0;
+  this.lights = {};
 
   this.display = new ROT.Display({width: this.map.width, height: this.map.height + TEXT_DISPLAY_LINES + 1});
   var container = document.getElementById("container");
@@ -303,7 +324,7 @@ var GAME_STATES = {
   }, ENTER_LISTENER, true, 'text5'),
   'text5': new GameState(function(game) {
     game.addText("Now, let's shed a bit of light on this situation, shall we?", function() {
-      game.visibility = 7;
+      game.visibility = 25;
     });
   }, ENTER_LISTENER, true, 'text6'),
   'text6': new GameState(function(game) {
@@ -314,6 +335,13 @@ var GAME_STATES = {
     });
   }, null, false, 'game'),
   'game': new GameState(function(game) {
+  }, MOVE_LISTENER, false, 'end_animation'),
+  'end_animation': new GameState(function(game) {
+    game.addText("You hear a low rumble coming from all around you....", function() {
+      game.animateWallDrop();
+    });
+  }, null, false, 'end'),
+  'end': new GameState(function(game) {
   }, MOVE_LISTENER, false, null),
 };
 var START_STATE = GAME_STATES['text0'];
@@ -328,14 +356,27 @@ Game.prototype.setKeyListener = function(listener) {
   window.onkeydown = listener ? listener.bind(null, this) : null;
 };
 
-Game.prototype.drawMap = function() {
-  var char_x = this.map.character.x;
-  var char_y = this.map.character.y;
+function square(x) { return x * x; }
+Game.prototype.getVisibility = function() {
   var visible = {};
-  this.fov_calculator.compute(char_x, char_y, this.visibility, function(x, y, distance, visibility) {
-    if (visibility >= 0.1) visible[[x, y]] = true;
+  this.fov_calculator.compute(this.map.character.x, this.map.character.y, this.visibility, function(x, y, distance, visibility) {
+    if (visibility >= 0.05) visible[[x, y]] = [x, y];
   });
+  for (var key in this.lights) {
+    var light = this.lights[key];
+    for (var x = light.x - LIGHT_RADIUS; x < light.x + LIGHT_RADIUS; x++) {
+      for (var y = light.y - LIGHT_RADIUS; y < light.y + LIGHT_RADIUS; y++) {
+        if (!this.map.isValid(x, y)) continue;
+        if (square(x - light.x) + square(y - light.y) > square(LIGHT_RADIUS)) continue;
+        visible[[x, y]] = [x, y];
+      }
+    }
+  }
+  return visible;
+};
 
+Game.prototype.drawMap = function() {
+  var visible = this.getVisibility();
   for (var x = 0; x < this.map.width; x++) {
     for (var y = 0; y < this.map.height; y++) {
       // TODO debugging
@@ -348,7 +389,7 @@ Game.prototype.drawMap = function() {
     }
   }
   var char_color = ROT.Color.interpolate([0, 0, 0], [255, 255, 255], this.map_opacity);
-  this.display.draw(char_x, char_y + TEXT_DISPLAY_LINES, '@', 'rgb(' + char_color + ')');
+  this.display.draw(this.map.character.x, this.map.character.y + TEXT_DISPLAY_LINES, '@', 'rgb(' + char_color + ')');
 };
 
 Game.prototype.redraw = function() {
@@ -379,6 +420,50 @@ Game.prototype.handleMove = function(dx, dy) {
 };
 
 Game.prototype.handleAction = function() {
+  if (!this.map.isOnLight()) return;
+  var x = this.map.character.x;
+  var y = this.map.character.y;
+  if (this.lights[[x, y]]) return;
+  this.lights[[x, y]] = {x: x, y: y};
+  if (Object.keys(this.lights).length == this.map.numLights()) {
+    this.nextState();
+  }
+  this.redraw();
+};
+
+Game.prototype.animateWallDrop = function() {
+  var visible = this.getVisibility();
+  var first_visible_column = this.map.width;
+  var last_visible_column = 0;
+  for (var key in visible) {
+    var coord = visible[key];
+    first_visible_column = Math.min(first_visible_column, coord[0]);
+    last_visible_column = Math.max(last_visible_column, coord[0]);
+  }
+
+  // First drop all the maze walls outside the visible range.
+  for (var x = 0; x < this.map.width; x++) {
+    if (x >= first_visible_column && x <= last_visible_column) continue;
+    for (var y = 0; y < this.map.height; y++) {
+      if (this.map.at(x, y).raw_symbol == 'M') this.map.setTile(x, y, TILE_INDEX['.']);
+    }
+  }
+
+  // Now animate dropping the walls that are visible, column by column.
+  var initial_delay_ms = 1000;
+  var decay_rate = 0.9;
+  function dropColumn(x, delay) {
+    for (var y = 0; y < this.map.height; y++) {
+      if (this.map.at(x, y).raw_symbol == 'M') this.map.setTile(x, y, TILE_INDEX['.']);
+    }
+    this.redraw();
+    if (x > first_visible_column) {
+      setTimeout(dropColumn.bind(this, x - 1, delay * decay_rate), delay);
+    } else {
+      this.nextState();
+    }
+  }
+  dropColumn.bind(this)(last_visible_column, initial_delay_ms);
 };
 
 function main() {
