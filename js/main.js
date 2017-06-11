@@ -10,14 +10,14 @@ var TILES = [
   },
   {
     raw_symbol: "x",
-    display_symbol: "X",
+    display_symbol: "O",
     default_color: [150, 150, 150],
     walkable: false,
     seethrough: false
   },
   {
     raw_symbol: "X",
-    display_symbol: "X",
+    display_symbol: "O",
     default_color: [150, 150, 150],
     walkable: false,
     seethrough: false
@@ -31,7 +31,7 @@ var TILES = [
   },
   {
     raw_symbol: "M",
-    display_symbol: "X",
+    display_symbol: "O",
     default_color: [150, 150, 150],
     walkable: false,
     seethrough: false
@@ -249,7 +249,7 @@ var Game = function() {
   this.map_opacity = 0.0;
   this.lights = {};
 
-  this.display = new ROT.Display({width: this.map.width, height: this.map.height + TEXT_DISPLAY_LINES + 2});
+  this.display = new ROT.Display({width: this.map.width, height: this.map.height + TEXT_DISPLAY_LINES + 3});
   var container = document.getElementById("container");
   container.appendChild(this.display.getContainer());
 
@@ -321,8 +321,7 @@ var MOVE_LISTENER = function(game, evt) {
       game.handleMove(0, 1);
       break;
     case ROT.VK_Q:
-      num_qs++;
-      if (num_qs >= 10) {
+      if (num_qs++ == 10) {
         for (key in game.map.lights) {
           var coord = game.map.lights[key];
           game.lights[key] = {x: coord[0], y: coord[1]};
@@ -441,11 +440,18 @@ Game.prototype.render = function() {
     this.display.drawText(0, TEXT_DISPLAY_LINES + 1 + this.map.height, "<press ENTER to continue>");
   }
   this.drawMap();
+  if (this.state == GAME_STATES['game'] && this.map.isOnLight() && !this.isLightOn()) {
+    this.display.drawText(0, TEXT_DISPLAY_LINES + 1 + this.map.height, "You see a giant lever sticking out of the ground.");
+  }
   if (this.state.args.show_light_count) {
     var text = Object.keys(this.lights).length + " of " + this.map.numLights() + " switches turned on";
     this.display.drawText(this.map.width - text.length, TEXT_DISPLAY_LINES + 1 + this.map.height, text);
   }
   this.needs_render = false;
+};
+
+Game.prototype.isLightOn = function() {
+  return !!this.lights[[this.map.character.x, this.map.character.y]];
 };
 
 Game.prototype.handleMove = function(dx, dy) {
@@ -470,6 +476,18 @@ Game.prototype.handleAction = function() {
   this.redraw();
 };
 
+Game.prototype.dropWall = function(x, y) {
+  var tile = this.map.at(x, y);
+  if (tile.raw_symbol == 'M') {
+    this.map.setTile(x, y, TILE_INDEX['.']);
+    this.map.setColor(x, y, [195, 160, 0]);
+  } else if (tile.raw_symbol == '.') {
+    this.map.setColor(x, y, [195, 160, 0]);
+  } else if (tile.raw_symbol == 'X') {
+    this.map.setColor(x, y, ROT.Color.interpolate([200, 0, 0], [0, 0, 200], x / this.map.width));
+  }
+};
+
 Game.prototype.animateWallDrop = function() {
   var visible = this.getVisibility();
   var first_visible_column = this.map.width;
@@ -484,38 +502,29 @@ Game.prototype.animateWallDrop = function() {
   for (var x = 0; x < this.map.width; x++) {
     if (x >= first_visible_column && x <= last_visible_column) continue;
     for (var y = 0; y < this.map.height; y++) {
-      if (this.map.at(x, y).raw_symbol == 'M') this.map.setTile(x, y, TILE_INDEX['.']);
+      this.dropWall(x, y);
     }
   }
 
   // Now animate dropping the walls that are visible, column by column.
   var initial_delay_ms = 250;
+  var total_delay_ms = 0;
+  var iters = 0;
   var decay_rate = 0.98;
-  function dropMaze(x, y, delay) {
-    var tile = this.map.at(x, y);
-    if (tile.raw_symbol == 'M') {
-      this.map.setTile(x, y, TILE_INDEX['.']);
-      this.map.setColor(x, y, [255, 255, 255]);
-    } else if (tile.raw_symbol == '.') {
-      this.map.setColor(x, y, [255, 255, 255]);
-    } else if (tile.raw_symbol == 'X') {
-      this.map.setColor(x, y, ROT.Color.interpolate([255, 0, 0], [0, 0, 255], x / this.map.width));
-    }
-    this.redraw();
-    if (x >= first_visible_column) {
-      var next_delay = Math.max(delay * decay_rate, 1);
-      var next_x = x;
-      var next_y = y + 1;
-      if (next_y == this.map.height) {
-        next_x--;
-        next_y = 0;
-      }
-      setTimeout(dropMaze.bind(this, next_x, next_y, next_delay), delay);
-    } else {
-      this.nextState();
+  for (var x = last_visible_column; x >= first_visible_column; x--) {
+    for (var y = 0; y < this.map.height; y++) {
+      setTimeout(function(x, y) {
+        this.dropWall(x, y);
+        this.redraw();
+      }.bind(this, x, y), total_delay_ms);
+      var next_delay_ms = Math.max(5, initial_delay_ms * Math.pow(decay_rate, iters / 3));
+      total_delay_ms += next_delay_ms;
+      iters++;
     }
   }
-  dropMaze.bind(this)(last_visible_column, 0, initial_delay_ms);
+  setTimeout(function() {
+    this.nextState();
+  }.bind(this), total_delay_ms);
 };
 
 function main() {
