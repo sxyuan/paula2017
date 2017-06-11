@@ -4,24 +4,35 @@ var TILES = [
   {
     raw_symbol: ".",
     display_symbol: ".",
+    default_color: [150, 150, 150],
     walkable: true,
     seethrough: true
   },
   {
+    raw_symbol: "x",
+    display_symbol: "X",
+    default_color: [150, 150, 150],
+    walkable: false,
+    seethrough: false
+  },
+  {
     raw_symbol: "X",
     display_symbol: "X",
+    default_color: [150, 150, 150],
     walkable: false,
     seethrough: false
   },
   {
     raw_symbol: "L",
     display_symbol: "!",
+    default_color: [255, 0, 0],
     walkable: true,
     seethrough: true
   },
   {
     raw_symbol: "M",
     display_symbol: "X",
+    default_color: [150, 150, 150],
     walkable: false,
     seethrough: false
   },
@@ -36,44 +47,46 @@ var LIGHT_RADIUS = 9;
 
 var Map = function() {
   var raw_map = [
-    "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
-    "X                                                                                                                                     X",
-    "X                                                                                                                                     X",
-    "X                                                                                                                                     X",
-    "X                                                                                                                                     X",
-    "X                                                                                                                                     X",
-    "X                                                                                                                                     X",
-    "X                                                                                                                                     X",
-    "X                                                                                                                                     X",
-    "X                                                                                                                                     X",
-    "X                                                                                                                                     X",
-    "X                                                                                                                                     X",
-    "X           X     X.......              ........      X   X   .........     ...     XXXXXX  ..         ..               XXX.          X",
-    "X           X     X..XXXXL.XXXXX  XXXXX .XX..XX.     XX   X   .X..XXXXX X   .XL     X     X.LXXXX  X   LX X       XXXX  XXXL          X",
-    "X           X     X.XX  XX.X   XX X   XX..XXXX..    XLX   X  ..X....X.  X....X.     X     X.XX  XX X   .X X      XX  XX XXX.          X",
-    "XS          XXXXXXX.X    X.X   XX X   XX ..XXL.     ..X   X  .LX.  .X.  XXXXXX.     XXXXXX .X    X X    X X      X    X  X            X",
-    "X           X.....X.XXXXXX.XXXXX. XXXXX   .XX.        X   XXXXXXX  .X.  X    X.     X       XXXXXX X    X X      XXXXXX               X",
-    "X           X.   LX.X....X.X..... XL.     .XX.        X        X   .X.  X    X.    .X       X    X X    X X      X.   X XXX           X",
-    "X           X.   .X.X.  .X.X.    .X..     .XX.      XXXXX      X   .XL  X    X.    LX       X    X LXXXX  XXXXXX XL   X XXX           X",
-    "X                .....  .....    ...      ....                     ...      ...    ..              ...           ..                   X",
-    "X                                                                                                                                     X",
-    "X                                                                                                                                     X",
-    "X                                                                                                                                     X",
-    "X                                                                                                                                     X",
-    "X                                                                                                                                     X",
-    "X                                                                                                                                     X",
-    "X                                                                                                                                     X",
-    "X                                                                                                                                     X",
-    "X                                                                                                                                     X",
-    "X                                                                                                                                     X",
-    "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+    "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "x                                                                                                                                     x",
+    "x                                                                                                                                     x",
+    "x                                                                                                                                     x",
+    "x                                                                                                                                     x",
+    "x                                                                                                                                     x",
+    "x                                                                                                                                     x",
+    "x                                                                                                                                     x",
+    "x                                                                                                                                     x",
+    "x                                                                                                                                     x",
+    "x                                                                                                                                     x",
+    "x                                                                                                                                     x",
+    "x           X     X    ....                           X   X   .             ...     XXXXXX  ..         ..               XXX.          x",
+    "x           X     X  XXXXL.XXXXX  XXXXX  XX  XX.     XX   X   .X  XXXXX X   .XL     X     X.LXXXX  X   LX X       XXXX  XXXL          x",
+    "x           X     X XX  XX X   XX X   XX  XXXX..    XLX   X  ..X    X.  X....X.     X     X.XX  XX X   .X X      XX  XX XXX.          x",
+    "xS          XXXXXXX X    X X   XX X   XX   XXL.     ..X   X  .LX.   X.  XXXXXX.     XXXXXX .X    X X    X X      X    X  X            x",
+    "x           X.....X XXXXXX XXXXX  XXXXX    XX.        X   XXXXXXX   X.  X    X.     X       XXXXXX X    X X      XXXXXX               x",
+    "x           X.   LX X    X X      XL.      XX.        X        X   .X.  X    X.    .X       X    X X    X X      X.   X XXX           x",
+    "x           X.   .X X    X X     .X..      XX.      XXXXX      X   .XL  X    X.    LX       X    X LXXXX  XXXXXX XL   X XXX           x",
+    "x                .               ...                               ...      ...    ..              ...           ..                   x",
+    "x                                                                                                                                     x",
+    "x                                                                                                                                     x",
+    "x                                                                                                                                     x",
+    "x                                                                                                                                     x",
+    "x                                                                                                                                     x",
+    "x                                                                                                                                     x",
+    "x                                                                                                                                     x",
+    "x                                                                                                                                     x",
+    "x                                                                                                                                     x",
+    "x                                                                                                                                     x",
+    "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
   ];
   this.width = raw_map[0].length;
   this.height = raw_map.length;
   this.lights = {};
   this.tiles = [];
+  this.colors = [];
   for (var x = 0; x < this.width; x++) {
     this.tiles[x] = [];
+    this.colors[x] = [];
     for (var y = 0; y < this.height; y++) {
       var symbol = raw_map[y][x];
       switch (symbol) {
@@ -99,6 +112,10 @@ var Map = function() {
 
 Map.prototype.setTile = function(x, y, type) {
   this.tiles[x][y] = type;
+}
+
+Map.prototype.setColor = function(x, y, color) {
+  this.colors[x][y] = color;
 }
 
 Map.prototype.isUnfilled = function(x, y) {
@@ -154,7 +171,9 @@ Map.prototype.fillMaze = function() {
   // Fill any remaining tiles.
   for (var x = 0; x < this.width; x++) {
     for (var y = 0; y < this.height; y++) {
-      if (this.tiles[x][y] == -1) this.setTile(x, y, TILE_INDEX['.']);
+      if (this.tiles[x][y] != -1) continue;
+      var tile = Math.random() > 0.5 ? '.' : 'M';
+      this.setTile(x, y, TILE_INDEX[tile]);
     }
   }
 }
@@ -166,6 +185,11 @@ Map.prototype.isValid = function(x, y) {
 Map.prototype.at = function(x, y) {
   if (!this.isValid(x, y)) return null;
   return TILES[this.tiles[x][y]];
+};
+
+Map.prototype.colorAt = function(x, y) {
+  if (!this.isValid(x, y)) return null;
+  return this.colors[x][y] || this.at(x, y).default_color;
 };
 
 Map.prototype.seethrough = function(x, y) {
@@ -225,7 +249,7 @@ var Game = function() {
   this.map_opacity = 0.0;
   this.lights = {};
 
-  this.display = new ROT.Display({width: this.map.width, height: this.map.height + TEXT_DISPLAY_LINES + 1});
+  this.display = new ROT.Display({width: this.map.width, height: this.map.height + TEXT_DISPLAY_LINES + 2});
   var container = document.getElementById("container");
   container.appendChild(this.display.getContainer());
 
@@ -264,10 +288,10 @@ Game.prototype.addText = function(text, animation_done_fn) {
  * Track and control the progression of the game. Simple enough, since the game is strictly linear.
  **/
 
-var GameState = function(enter_fn, key_listener, is_text_state, next_state) {
+var GameState = function(enter_fn, key_listener, args, next_state) {
   this.enter_fn = enter_fn;
   this.key_listener = key_listener;
-  this.is_text_state = is_text_state;
+  this.args = args;
   this.next_state = next_state;
 };
 
@@ -281,6 +305,7 @@ var ENTER_LISTENER = function(game, evt) {
     game.nextState();
   }
 };
+var num_qs = 0;
 var MOVE_LISTENER = function(game, evt) {
   switch (evt.keyCode) {
     case ROT.VK_LEFT:
@@ -295,6 +320,17 @@ var MOVE_LISTENER = function(game, evt) {
     case ROT.VK_DOWN:
       game.handleMove(0, 1);
       break;
+    case ROT.VK_Q:
+      num_qs++;
+      if (num_qs >= 10) {
+        for (key in game.map.lights) {
+          var coord = game.map.lights[key];
+          game.lights[key] = {x: coord[0], y: coord[1]};
+        }
+        game.redraw();
+        game.nextState();
+      }
+      break;
     case ROT.VK_RETURN:
       game.handleAction();
       break;
@@ -304,13 +340,13 @@ var MOVE_LISTENER = function(game, evt) {
 var GAME_STATES = {
   'text0': new GameState(function(game) {
     game.addText("Back in my day (actually, maybe a bit before my day), computers were a lot less powerful than they are now.");
-  }, ENTER_LISTENER, true, 'text1'),
+  }, ENTER_LISTENER, { is_text_state: true }, 'text1'),
   'text1': new GameState(function(game) {
     game.addText("Games didn't have fancy graphics - sometimes, they had no graphics at all.");
-  }, ENTER_LISTENER, true, 'text2'),
+  }, ENTER_LISTENER, { is_text_state: true }, 'text2'),
   'text2': new GameState(function(game) {
     game.addText("Instead, characters might be represented by, erm... characters. 'ASCII' characters.");
-  }, ENTER_LISTENER, true, 'text3'),
+  }, ENTER_LISTENER, { is_text_state: true }, 'text3'),
   'text3': new GameState(function(game) {
     game.addText("For example, your character might be the @ sign.", function() {
       game.animations.push(new LinearInterpolator(1000, function(value) {
@@ -318,31 +354,31 @@ var GAME_STATES = {
       }));
       game.addText("Oh, there you are!");
     });
-  }, ENTER_LISTENER, true, 'text4'),
+  }, ENTER_LISTENER, { is_text_state: true }, 'text4'),
   'text4': new GameState(function(game) {
-    game.addText("(Clearly, it took a bit more imagination back then.)");
-  }, ENTER_LISTENER, true, 'text5'),
+    game.addText("(Clearly, games took a bit more imagination back then.)");
+  }, ENTER_LISTENER, { is_text_state: true }, 'text5'),
   'text5': new GameState(function(game) {
     game.addText("Now, let's shed a bit of light on this situation, shall we?", function() {
       game.visibility = 25;
     });
-  }, ENTER_LISTENER, true, 'text6'),
+  }, ENTER_LISTENER, { is_text_state: true }, 'text6'),
   'text6': new GameState(function(game) {
     game.addText("In case you weren't sure, you can use the arrow keys to move around.", function() {
       game.addText("I'm sure you can figure out the rest. Good luck!", function() {
         game.nextState();
       });
     });
-  }, null, false, 'game'),
+  }, null, {}, 'game'),
   'game': new GameState(function(game) {
-  }, MOVE_LISTENER, false, 'end_animation'),
+  }, MOVE_LISTENER, { show_light_count: true }, 'end_animation'),
   'end_animation': new GameState(function(game) {
     game.addText("You hear a low rumble coming from all around you....", function() {
       game.animateWallDrop();
     });
-  }, null, false, 'end'),
+  }, null, { show_light_count: true }, 'end'),
   'end': new GameState(function(game) {
-  }, MOVE_LISTENER, false, null),
+  }, MOVE_LISTENER, {}, null),
 };
 var START_STATE = GAME_STATES['text0'];
 
@@ -379,17 +415,15 @@ Game.prototype.drawMap = function() {
   var visible = this.getVisibility();
   for (var x = 0; x < this.map.width; x++) {
     for (var y = 0; y < this.map.height; y++) {
-      // TODO debugging
-      //var fg_color = visible[[x, y]] ? "yellow" : "white";
-      var fg_color = "rgb(150, 150, 150)";
       if (!visible[[x, y]]) continue;
       var tile = this.map.at(x, y);
+      var fg_color = 'rgb(' + this.map.colorAt(x, y) + ')';
       this.display.draw(
-          x, y + TEXT_DISPLAY_LINES, tile ? tile.display_symbol : '?', fg_color);
+          x, y + TEXT_DISPLAY_LINES + 1, tile ? tile.display_symbol : '?', fg_color);
     }
   }
   var char_color = ROT.Color.interpolate([0, 0, 0], [255, 255, 255], this.map_opacity);
-  this.display.draw(this.map.character.x, this.map.character.y + TEXT_DISPLAY_LINES, '@', 'rgb(' + char_color + ')');
+  this.display.draw(this.map.character.x, this.map.character.y + TEXT_DISPLAY_LINES + 1, '@', 'rgb(' + char_color + ')');
 };
 
 Game.prototype.redraw = function() {
@@ -403,10 +437,14 @@ Game.prototype.render = function() {
     var line = this.text_lines[i];
     this.display.drawText(0, i, line.getText());
   }
-  if (this.state.is_text_state) {
-    this.display.drawText(0, TEXT_DISPLAY_LINES + this.map.height, "<press ENTER to continue>");
+  if (this.state.args.is_text_state) {
+    this.display.drawText(0, TEXT_DISPLAY_LINES + 1 + this.map.height, "<press ENTER to continue>");
   }
   this.drawMap();
+  if (this.state.args.show_light_count) {
+    var text = Object.keys(this.lights).length + " of " + this.map.numLights() + " switches turned on";
+    this.display.drawText(this.map.width - text.length, TEXT_DISPLAY_LINES + 1 + this.map.height, text);
+  }
   this.needs_render = false;
 };
 
@@ -425,6 +463,7 @@ Game.prototype.handleAction = function() {
   var y = this.map.character.y;
   if (this.lights[[x, y]]) return;
   this.lights[[x, y]] = {x: x, y: y};
+  this.map.setColor(x, y, [0, 255, 0]);
   if (Object.keys(this.lights).length == this.map.numLights()) {
     this.nextState();
   }
@@ -450,20 +489,33 @@ Game.prototype.animateWallDrop = function() {
   }
 
   // Now animate dropping the walls that are visible, column by column.
-  var initial_delay_ms = 1000;
-  var decay_rate = 0.9;
-  function dropColumn(x, delay) {
-    for (var y = 0; y < this.map.height; y++) {
-      if (this.map.at(x, y).raw_symbol == 'M') this.map.setTile(x, y, TILE_INDEX['.']);
+  var initial_delay_ms = 250;
+  var decay_rate = 0.98;
+  function dropMaze(x, y, delay) {
+    var tile = this.map.at(x, y);
+    if (tile.raw_symbol == 'M') {
+      this.map.setTile(x, y, TILE_INDEX['.']);
+      this.map.setColor(x, y, [255, 255, 255]);
+    } else if (tile.raw_symbol == '.') {
+      this.map.setColor(x, y, [255, 255, 255]);
+    } else if (tile.raw_symbol == 'X') {
+      this.map.setColor(x, y, ROT.Color.interpolate([255, 0, 0], [0, 0, 255], x / this.map.width));
     }
     this.redraw();
-    if (x > first_visible_column) {
-      setTimeout(dropColumn.bind(this, x - 1, delay * decay_rate), delay);
+    if (x >= first_visible_column) {
+      var next_delay = Math.max(delay * decay_rate, 1);
+      var next_x = x;
+      var next_y = y + 1;
+      if (next_y == this.map.height) {
+        next_x--;
+        next_y = 0;
+      }
+      setTimeout(dropMaze.bind(this, next_x, next_y, next_delay), delay);
     } else {
       this.nextState();
     }
   }
-  dropColumn.bind(this)(last_visible_column, initial_delay_ms);
+  dropMaze.bind(this)(last_visible_column, 0, initial_delay_ms);
 };
 
 function main() {
